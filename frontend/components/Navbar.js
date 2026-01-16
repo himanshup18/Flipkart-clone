@@ -3,18 +3,47 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { FiSearch, FiShoppingCart, FiSmartphone, FiUsers, FiHeadphones, FiTv, FiHome, FiShoppingBag, FiPackage, FiHeart, FiPackage as FiOrders } from 'react-icons/fi'
+import { FiSearch, FiShoppingCart, FiHeart, FiPackage as FiOrders } from 'react-icons/fi'
+import Image from 'next/image'
 import { getCart } from '@/lib/api'
 import { useAuth } from '@/contexts/AuthContext'
 
 const categories = [
-  { name: 'Mobiles & Tablets', slug: 'electronics', icon: FiSmartphone },
-  { name: 'Fashion', slug: 'fashion', icon: FiUsers },
-  { name: 'Electronics', slug: 'electronics', icon: FiHeadphones },
-  { name: 'TVs & Appliances', slug: 'home-furniture', icon: FiTv },
-  { name: 'Home & Furniture', slug: 'home-furniture', icon: FiHome },
-  { name: 'Beauty, Food & More', slug: 'beauty', icon: FiShoppingBag },
-  { name: 'Grocery', slug: 'grocery', icon: FiPackage },
+  { 
+    name: 'Mobiles & Tablets', 
+    slug: 'electronics', 
+    image: 'https://rukminim2.flixcart.com/flap/128/128/image/22fddf3c7da4c4f4.png?q=100'
+  },
+  { 
+    name: 'Fashion', 
+    slug: 'fashion', 
+    image: 'https://rukminim2.flixcart.com/flap/128/128/image/c12afc196e5d4107.png?q=100'
+  },
+  { 
+    name: 'Electronics', 
+    slug: 'electronics', 
+    image: 'https://rukminim2.flixcart.com/flap/128/128/image/69c6589653afdb9a.png?q=100'
+  },
+  { 
+    name: 'TVs & Appliances', 
+    slug: 'home-furniture', 
+    image: 'https://rukminim2.flixcart.com/flap/128/128/image/0ff199d1bd27eb98.png?q=100'
+  },
+  { 
+    name: 'Home & Furniture', 
+    slug: 'home-furniture', 
+    image: 'https://rukminim2.flixcart.com/flap/128/128/image/ab7e2b022a4587dd.jpg?q=100'
+  },
+  { 
+    name: 'Beauty, Food & More', 
+    slug: 'beauty', 
+    image: 'https://rukminim2.flixcart.com/flap/128/128/image/0d75b34f7d8fbcb3.png?q=100'
+  },
+  { 
+    name: 'Grocery', 
+    slug: 'grocery', 
+    image: 'https://rukminim2.flixcart.com/flap/128/128/image/29327f40e9c4d26b.png?q=100'
+  },
 ]
 
 export default function Navbar() {
@@ -193,20 +222,27 @@ export default function Navbar() {
       {/* Category Navigation Bar */}
       <div className="bg-white border-b border-gray-200 sticky top-16 z-40">
         <div className="container mx-auto px-4">
-          <div className="flex items-center space-x-6 h-12 overflow-x-auto">
-            {categories.map((category) => {
-              const Icon = category.icon
-              return (
-                <Link
-                  key={category.slug}
-                  href={`/?category=${category.slug}`}
-                  className="flex items-center space-x-1 text-sm font-medium text-gray-700 hover:text-flipkart-blue whitespace-nowrap transition"
-                >
-                  <Icon size={18} />
-                  <span>{category.name}</span>
-                </Link>
-              )
-            })}
+          <div className="flex items-center space-x-4 h-16 overflow-x-auto">
+            {categories.map((category) => (
+              <Link
+                key={category.slug}
+                href={`/?category=${category.slug}`}
+                className="flex flex-col items-center justify-center space-y-1 min-w-[80px] h-full hover:bg-gray-50 transition px-2 py-1 group"
+              >
+                <div className="relative w-12 h-12 flex-shrink-0">
+                  <Image
+                    src={category.image}
+                    alt={category.name}
+                    fill
+                    className="object-contain"
+                    unoptimized
+                  />
+                </div>
+                <span className="text-xs font-medium text-gray-700 group-hover:text-flipkart-blue whitespace-nowrap text-center leading-tight">
+                  {category.name}
+                </span>
+              </Link>
+            ))}
           </div>
         </div>
       </div>
