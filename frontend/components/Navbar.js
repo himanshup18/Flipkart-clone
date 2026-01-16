@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { FiSearch, FiShoppingCart, FiSmartphone, FiUsers, FiHeadphones, FiTv, FiHome, FiShoppingBag, FiPackage } from 'react-icons/fi'
+import { FiSearch, FiShoppingCart, FiSmartphone, FiUsers, FiHeadphones, FiTv, FiHome, FiShoppingBag, FiPackage, FiHeart, FiPackage as FiOrders } from 'react-icons/fi'
 import { getCart } from '@/lib/api'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -140,6 +140,22 @@ export default function Navbar() {
                         <p className="text-sm font-medium text-gray-800">{getUserName()}</p>
                         <p className="text-xs text-gray-500 truncate">{user.email}</p>
                       </div>
+                      <Link
+                        href="/orders"
+                        onClick={() => setShowDropdown(false)}
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition flex items-center space-x-2"
+                      >
+                        <FiOrders size={16} />
+                        <span>My Orders</span>
+                      </Link>
+                      <Link
+                        href="/wishlist"
+                        onClick={() => setShowDropdown(false)}
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition flex items-center space-x-2"
+                      >
+                        <FiHeart size={16} />
+                        <span>Wishlist</span>
+                      </Link>
                       <button
                         onClick={handleSignOut}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition"

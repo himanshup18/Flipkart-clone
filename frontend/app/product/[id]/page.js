@@ -3,20 +3,29 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { getProduct, addToCart } from '@/lib/api'
-import { FiStar, FiShoppingCart, FiShoppingBag } from 'react-icons/fi'
+import { getProduct, addToCart, addToWishlist, checkWishlist } from '@/lib/api'
+import { FiStar, FiShoppingCart, FiShoppingBag, FiHeart } from 'react-icons/fi'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function ProductDetail() {
   const params = useParams()
   const router = useRouter()
+  const { user } = useAuth()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [quantity, setQuantity] = useState(1)
+  const [inWishlist, setInWishlist] = useState(false)
 
   useEffect(() => {
     fetchProduct()
   }, [params.id])
+
+  useEffect(() => {
+    if (user && product) {
+      checkWishlistStatus()
+    }
+  }, [user, product])
 
   const fetchProduct = async () => {
     try {
@@ -46,6 +55,39 @@ export default function ProductDetail() {
     } catch (error) {
       console.error('Error adding to cart:', error)
       alert('Failed to add product to cart')
+    }
+  }
+
+  const checkWishlistStatus = async () => {
+    try {
+      const result = await checkWishlist(product.id)
+      setInWishlist(result.inWishlist)
+    } catch (error) {
+      // User not logged in or error
+    }
+  }
+
+  const handleWishlistClick = async () => {
+    if (!user) {
+      router.push('/login')
+      return
+    }
+
+    try {
+      if (inWishlist) {
+        alert('Item is already in wishlist. Go to wishlist page to remove it.')
+      } else {
+        await addToWishlist(product.id)
+        setInWishlist(true)
+        alert('Added to wishlist!')
+      }
+    } catch (error) {
+      console.error('Error updating wishlist:', error)
+      if (error.response?.status === 400 && error.response?.data?.error?.includes('already')) {
+        setInWishlist(true)
+      } else {
+        alert('Failed to update wishlist')
+      }
     }
   }
 
@@ -239,6 +281,17 @@ export default function ProductDetail() {
                 >
                   <FiShoppingBag size={20} />
                   <span>BUY NOW</span>
+                </button>
+                <button
+                  onClick={handleWishlistClick}
+                  className={`px-4 py-3 rounded-sm transition flex items-center justify-center shadow-md ${
+                    inWishlist
+                      ? 'bg-red-500 text-white hover:bg-red-600'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                  title={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+                >
+                  <FiHeart className={inWishlist ? 'fill-current' : ''} size={20} />
                 </button>
               </div>
 

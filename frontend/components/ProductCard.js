@@ -1,14 +1,61 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { FiStar } from 'react-icons/fi'
+import { FiStar, FiHeart } from 'react-icons/fi'
+import { addToWishlist, removeFromWishlist, checkWishlist } from '@/lib/api'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function ProductCard({ product }) {
   const router = useRouter()
+  const { user } = useAuth()
+  const [inWishlist, setInWishlist] = useState(false)
+  const [wishlistId, setWishlistId] = useState(null)
+
+  useEffect(() => {
+    if (user) {
+      checkWishlistStatus()
+    }
+  }, [user, product.id])
+
+  const checkWishlistStatus = async () => {
+    try {
+      const result = await checkWishlist(product.id)
+      setInWishlist(result.inWishlist)
+    } catch (error) {
+      // User not logged in or error
+    }
+  }
 
   const handleClick = () => {
     router.push(`/product/${product.id}`)
+  }
+
+  const handleWishlistClick = async (e) => {
+    e.stopPropagation()
+    if (!user) {
+      router.push('/login')
+      return
+    }
+
+    try {
+      if (inWishlist) {
+        // Note: We'd need wishlistId to remove, but for now just show message
+        alert('Item is in wishlist. Go to wishlist page to remove it.')
+      } else {
+        await addToWishlist(product.id)
+        setInWishlist(true)
+        alert('Added to wishlist!')
+      }
+    } catch (error) {
+      console.error('Error updating wishlist:', error)
+      if (error.response?.status === 400 && error.response?.data?.error?.includes('already')) {
+        setInWishlist(true)
+      } else {
+        alert('Failed to update wishlist')
+      }
+    }
   }
 
   const discountPercent = product.original_price
@@ -18,8 +65,21 @@ export default function ProductCard({ product }) {
   return (
     <div
       onClick={handleClick}
-      className="bg-white rounded-sm shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden border border-gray-100 p-4 flex flex-col"
+      className="bg-white rounded-sm shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden border border-gray-100 p-4 flex flex-col relative group"
     >
+      {/* Wishlist Button */}
+      <button
+        onClick={handleWishlistClick}
+        className={`absolute top-2 right-2 z-10 p-2 rounded-full shadow-md transition ${
+          inWishlist
+            ? 'bg-red-500 text-white'
+            : 'bg-white text-gray-600 hover:bg-red-50 opacity-0 group-hover:opacity-100'
+        }`}
+        title={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+      >
+        <FiHeart className={inWishlist ? 'fill-current' : ''} size={18} />
+      </button>
+
       <div className="relative w-full h-48 bg-white mb-3 flex-shrink-0">
         {product.images && product.images.length > 0 ? (
           <Image
