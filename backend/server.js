@@ -1,11 +1,11 @@
-const express = require("express");
-const cors = require("cors");
-const dotenv = require("dotenv");
-const productsRoutes = require("./routes/products");
-const cartRoutes = require("./routes/cart");
-const ordersRoutes = require("./routes/orders");
-const categoriesRoutes = require("./routes/categories");
-const authRoutes = require("./routes/auth");
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import productsRoutes from "./routes/products.js";
+import cartRoutes from "./routes/cart.js";
+import ordersRoutes from "./routes/orders.js";
+import categoriesRoutes from "./routes/categories.js";
+import authRoutes from "./routes/auth.js";
 
 dotenv.config();
 

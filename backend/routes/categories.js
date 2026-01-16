@@ -1,24 +1,9 @@
-const express = require('express');
+import express from 'express';
+import { getCategories } from '../controllers/categoriesController.js';
+
 const router = express.Router();
-const supabase = require('../config/database');
 
 // Get all categories
-router.get('/', async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .order('name');
+router.get('/', getCategories);
 
-    if (error) {
-      throw error;
-    }
-
-    res.json(data);
-  } catch (error) {
-    console.error('Error fetching categories:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-module.exports = router;
+export default router;
