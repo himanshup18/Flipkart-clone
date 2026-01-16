@@ -31,6 +31,16 @@ export default function Navbar() {
     }
   }, [user])
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showDropdown && !event.target.closest('.user-dropdown')) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showDropdown])
+
   const fetchCartCount = async () => {
     try {
       const cart = await getCart()
@@ -53,8 +63,8 @@ export default function Navbar() {
   }
 
   const getUserName = () => {
-    if (user?.user_metadata?.name) {
-      return user.user_metadata.name
+    if (user?.name) {
+      return user.name
     }
     if (user?.email) {
       return user.email.split('@')[0]
@@ -109,7 +119,7 @@ export default function Navbar() {
               {authLoading ? (
                 <div className="text-sm">Loading...</div>
               ) : user ? (
-                <div className="relative">
+                <div className="relative user-dropdown">
                   <button
                     onClick={() => setShowDropdown(!showDropdown)}
                     className="flex items-center space-x-1 text-sm font-medium hover:opacity-80 transition"

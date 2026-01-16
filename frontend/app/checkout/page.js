@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getCart, createOrder } from '@/lib/api'
+import ProtectedRoute from '@/components/ProtectedRoute'
 
-export default function Checkout() {
+function CheckoutContent() {
   const [cartItems, setCartItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -252,5 +253,13 @@ export default function Checkout() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function Checkout() {
+  return (
+    <ProtectedRoute>
+      <CheckoutContent />
+    </ProtectedRoute>
   )
 }

@@ -32,8 +32,9 @@ export default function Signup() {
     setLoading(true)
 
     try {
-      await signUp(email, password, name)
-      router.push('/login')
+      await signUp(name, email, password)
+      router.push('/')
+      router.refresh()
     } catch (err) {
       setError(err.message || 'Failed to create account')
     } finally {

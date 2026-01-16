@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { getCart, updateCartItem, removeFromCart } from '@/lib/api'
 import { FiTrash2, FiMinus, FiPlus, FiShoppingBag } from 'react-icons/fi'
+import ProtectedRoute from '@/components/ProtectedRoute'
 
-export default function Cart() {
+function CartContent() {
   const [cartItems, setCartItems] = useState([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
@@ -219,5 +220,13 @@ export default function Cart() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function Cart() {
+  return (
+    <ProtectedRoute>
+      <CartContent />
+    </ProtectedRoute>
   )
 }

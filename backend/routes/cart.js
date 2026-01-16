@@ -1,12 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const supabase = require('../config/database');
+const { getUserIdFromToken } = require('../middleware/auth');
 
 const DEFAULT_USER_ID = 1;
 
-// Get cart items for default user
+// Get cart items for authenticated user
 router.get('/', async (req, res) => {
   try {
+    const userId = getUserIdFromToken(req);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     const { data, error } = await supabase
       .from('cart')
       .select(`
@@ -21,7 +26,7 @@ router.get('/', async (req, res) => {
           brand
         )
       `)
-      .eq('user_id', DEFAULT_USER_ID)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -55,6 +60,10 @@ router.get('/', async (req, res) => {
 // Add item to cart
 router.post('/', async (req, res) => {
   try {
+    const userId = getUserIdFromToken(req);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     const { product_id, quantity = 1 } = req.body;
 
     if (!product_id) {
@@ -76,7 +85,7 @@ router.post('/', async (req, res) => {
     const { data: existingItem, error: existingError } = await supabase
       .from('cart')
       .select('*')
-      .eq('user_id', DEFAULT_USER_ID)
+      .eq('user_id', userId)
       .eq('product_id', product_id)
       .single();
 
@@ -103,7 +112,7 @@ router.post('/', async (req, res) => {
       const { data, error } = await supabase
         .from('cart')
         .insert({
-          user_id: DEFAULT_USER_ID,
+          user_id: userId,
           product_id: product_id,
           quantity: quantity
         })
@@ -125,6 +134,10 @@ router.post('/', async (req, res) => {
 // Update cart item quantity
 router.put('/:id', async (req, res) => {
   try {
+    const userId = getUserIdFromToken(req);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     const { id } = req.params;
     const { quantity } = req.body;
 
@@ -139,7 +152,7 @@ router.put('/:id', async (req, res) => {
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
-      .eq('user_id', DEFAULT_USER_ID)
+      .eq('user_id', userId)
       .select()
       .single();
 
@@ -164,13 +177,17 @@ router.put('/:id', async (req, res) => {
 // Remove item from cart
 router.delete('/:id', async (req, res) => {
   try {
+    const userId = getUserIdFromToken(req);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     const { id } = req.params;
     
     const { data, error } = await supabase
       .from('cart')
       .delete()
       .eq('id', id)
-      .eq('user_id', DEFAULT_USER_ID)
+      .eq('user_id', userId)
       .select()
       .single();
 
@@ -195,10 +212,14 @@ router.delete('/:id', async (req, res) => {
 // Clear cart
 router.delete('/', async (req, res) => {
   try {
+    const userId = getUserIdFromToken(req);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     const { error } = await supabase
       .from('cart')
       .delete()
-      .eq('user_id', DEFAULT_USER_ID);
+      .eq('user_id', userId);
 
     if (error) {
       throw error;

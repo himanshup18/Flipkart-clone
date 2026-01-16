@@ -1,14 +1,9 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import axios from 'axios'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
 
 const AuthContext = createContext({})
 
@@ -23,68 +18,98 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [token, setToken] = useState(null)
 
   useEffect(() => {
-    if (!supabase) {
+    // Check for token in localStorage
+    const storedToken = localStorage.getItem('token')
+    const storedUser = localStorage.getItem('user')
+
+    if (storedToken && storedUser) {
+      setToken(storedToken)
+      setUser(JSON.parse(storedUser))
+      // Verify token is still valid
+      verifyToken(storedToken)
+    } else {
       setLoading(false)
-      return
     }
-
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => subscription.unsubscribe()
   }, [])
 
-  const signUp = async (email, password, name) => {
-    if (!supabase) {
-      throw new Error('Supabase not configured')
+  const verifyToken = async (tokenToVerify) => {
+    try {
+      const response = await axios.get(`${API_URL}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${tokenToVerify}`
+        }
+      })
+      setUser(response.data.user)
+      setToken(tokenToVerify)
+    } catch (error) {
+      // Token is invalid, clear storage
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      setToken(null)
+      setUser(null)
+    } finally {
+      setLoading(false)
     }
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name: name,
-        },
-      },
-    })
-    if (error) throw error
-    return data
+  }
+
+  const signUp = async (name, email, password) => {
+    try {
+      const response = await axios.post(`${API_URL}/auth/register`, {
+        name,
+        email,
+        password
+      })
+      
+      const { user: newUser, token: newToken } = response.data
+      
+      // Store token and user in localStorage
+      localStorage.setItem('token', newToken)
+      localStorage.setItem('user', JSON.stringify(newUser))
+      
+      setToken(newToken)
+      setUser(newUser)
+      
+      return { user: newUser, token: newToken }
+    } catch (error) {
+      throw new Error(error.response?.data?.error || 'Failed to create account')
+    }
   }
 
   const signIn = async (email, password) => {
-    if (!supabase) {
-      throw new Error('Supabase not configured')
+    try {
+      const response = await axios.post(`${API_URL}/auth/login`, {
+        email,
+        password
+      })
+      
+      const { user: loggedInUser, token: newToken } = response.data
+      
+      // Store token and user in localStorage
+      localStorage.setItem('token', newToken)
+      localStorage.setItem('user', JSON.stringify(loggedInUser))
+      
+      setToken(newToken)
+      setUser(loggedInUser)
+      
+      return { user: loggedInUser, token: newToken }
+    } catch (error) {
+      throw new Error(error.response?.data?.error || 'Failed to sign in')
     }
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    if (error) throw error
-    return data
   }
 
   const signOut = async () => {
-    if (!supabase) {
-      throw new Error('Supabase not configured')
-    }
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    setToken(null)
+    setUser(null)
   }
 
   const value = {
     user,
+    token,
     loading,
     signUp,
     signIn,

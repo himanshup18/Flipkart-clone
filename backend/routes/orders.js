@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const supabase = require('../config/database');
+const { getUserIdFromToken } = require('../middleware/auth');
 
 const DEFAULT_USER_ID = 1;
 
@@ -9,13 +10,17 @@ function generateOrderNumber() {
   return 'ORD' + Date.now() + Math.floor(Math.random() * 1000);
 }
 
-// Get all orders for default user
+// Get all orders for authenticated user
 router.get('/', async (req, res) => {
   try {
+    const userId = getUserIdFromToken(req);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     const { data: orders, error: ordersError } = await supabase
       .from('orders')
       .select('*')
-      .eq('user_id', DEFAULT_USER_ID)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (ordersError) {
@@ -51,13 +56,17 @@ router.get('/', async (req, res) => {
 // Get single order by ID
 router.get('/:id', async (req, res) => {
   try {
+    const userId = getUserIdFromToken(req);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     const { id } = req.params;
     
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .select('*')
       .eq('id', id)
-      .eq('user_id', DEFAULT_USER_ID)
+      .eq('user_id', userId)
       .single();
 
     if (orderError) {
@@ -93,6 +102,10 @@ router.get('/:id', async (req, res) => {
 // Create new order
 router.post('/', async (req, res) => {
   try {
+    const userId = getUserIdFromToken(req);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     const { shipping_address } = req.body;
 
     if (!shipping_address) {
@@ -110,7 +123,7 @@ router.post('/', async (req, res) => {
           stock
         )
       `)
-      .eq('user_id', DEFAULT_USER_ID);
+      .eq('user_id', userId);
 
     if (cartError) {
       throw cartError;
@@ -142,7 +155,7 @@ router.post('/', async (req, res) => {
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
-        user_id: DEFAULT_USER_ID,
+        user_id: userId,
         order_number: orderNumber,
         total_amount: totalAmount,
         shipping_address: shipping_address,
@@ -203,7 +216,7 @@ router.post('/', async (req, res) => {
     const { error: clearCartError } = await supabase
       .from('cart')
       .delete()
-      .eq('user_id', DEFAULT_USER_ID);
+      .eq('user_id', userId);
 
     if (clearCartError) {
       console.error('Error clearing cart:', clearCartError);
