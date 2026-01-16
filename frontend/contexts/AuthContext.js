@@ -3,7 +3,14 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import axios from 'axios'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+// Ensure API_URL always ends with /api
+const getApiUrl = () => {
+  const url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+  // If URL doesn't end with /api, add it
+  return url.endsWith('/api') ? url : url.endsWith('/') ? `${url}api` : `${url}/api`
+}
+
+const API_URL = getApiUrl()
 
 const AuthContext = createContext({})
 
